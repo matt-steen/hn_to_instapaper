@@ -3,33 +3,44 @@ require "httparty"
 class HackerNewsClient
   include HTTParty
 
-  def get_top_thirty(date)
-    n = 30
+  def initialize
+    # in theory, it should be possible to set base_uri for HTTParty, but that doesn't seem to work with
+    # https without additional config
+    @search_url = "https://hn.algolia.com/api/v1/search"
+  end
 
-    start = date.to_time.to_i
-    stop = (date + 1).to_time.to_i
-    exp_start = 1663214400
-    exp_stop = 1663300800
+  def get_top_posts(date, count = 30)
+    query = get_query(date, count)
+    response = HTTParty.get(@search_url, query: query)
 
-    response = HTTParty.get("https://hn.algolia.com/api/v1/search?numericFilters=created_at_i%3E#{start},created_at_i%3C#{stop}&hitsPerPage=#{n}")
-
-    # puts response.body, response.code, response.message, response.headers.inspect
     if response.code < 200 || response.code >= 300
       puts "error calling HN API (#{response.code}): #{response.body}"
-      return
+      return []
     end
 
     body = JSON.parse(response.body)
 
-    puts "found #{body["hits"].size} articles:"
-
+    posts = []
     body["hits"].each do |hit|
       title = get_title(hit)
       url = get_url(hit)
 
-      puts title
-      puts url
+      posts.append([title, url])
     end
+
+    posts
+  end
+
+  private
+
+  def get_query(date, count)
+    start = date.to_time.to_i
+    stop = (date + 1).to_time.to_i
+
+    {
+      hitsPerPage: count,
+      numericFilters: "created_at_i>#{start},created_at_i<#{stop}"
+    }
   end
 
   def get_title(hit)
