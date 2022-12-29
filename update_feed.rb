@@ -53,6 +53,7 @@ posts.each do |post|
 
     input = get_char
     if input == "y"
+      puts "adding post"
       ip_client.add_url(url, title)
     end
   else
