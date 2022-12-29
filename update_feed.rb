@@ -1,4 +1,6 @@
+require_relative "config"
 require_relative "hacker_news_client"
+require_relative "instapaper_client"
 
 # script to pull articles from HN and post them to Instapaper
 hn_client = HackerNewsClient.new
@@ -11,4 +13,11 @@ puts
 
 posts = hn_client.get_top_posts(date, count)
 
-posts.each { |post| puts post }
+ip_client = InstapaperClient.new(Config::INSTAPAPER_USERNAME, Config::INSTAPAPER_PASSWORD)
+
+posts.each do |post|
+  title = post[0]
+  url = post[1]
+  puts "adding post: #{title}"
+  ip_client.add_url(url, title)
+end
