@@ -45,11 +45,11 @@ posts = hn_client.get_top_posts(options[:date], options[:count])
 
 ip_client = InstapaperClient.new(Config::INSTAPAPER_USERNAME, Config::INSTAPAPER_PASSWORD)
 
-posts.each do |post|
+posts.each_with_index do |post, idx|
   title = post[0]
   url = post[1]
   if options[:confirm]
-    puts "add post? #{title} (y/n)"
+    puts "#{idx + 1}: add post? #{title} (y/n)"
 
     input = get_char
     if input == "y"
