@@ -2,16 +2,15 @@ require "httparty"
 
 class HackerNewsClient
   include HTTParty
+  base_uri "https://hn.algolia.com"
 
   def initialize
-    # in theory, it should be possible to set base_uri for HTTParty, but that doesn't seem to work with
-    # https without additional config
-    @search_url = "https://hn.algolia.com/api/v1/search"
+    @search_url = "/api/v1/search"
   end
 
   def get_top_posts(date, count = 30)
     query = get_query(date, count)
-    response = HTTParty.get(@search_url, query: query)
+    response = self.class.get(@search_url, query: query)
 
     if response.code < 200 || response.code >= 300
       puts "error calling HN API (#{response.code}): #{response.body}"
