@@ -31,7 +31,10 @@ OptionParser.new do |opts|
   opts.on("--confirm", "Whether to confirm each post during upload")
 end.parse!(into: options)
 
-puts options
+if options[:date] == Date.today
+  puts "warning: using data for today (which will be incomplete). did you mean yesterday?"
+  puts
+end
 
 puts "pulling top #{options[:count]} articles for #{options[:date]}"
 puts
