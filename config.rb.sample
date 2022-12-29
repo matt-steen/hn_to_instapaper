@@ -1,0 +1,4 @@
+module Config
+  INSTAPAPER_USERNAME = ""
+  INSTAPAPER_PASSWORD = ""
+end
