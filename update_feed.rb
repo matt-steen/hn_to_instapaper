@@ -2,22 +2,58 @@ require_relative "config"
 require_relative "hacker_news_client"
 require_relative "instapaper_client"
 
-# script to pull articles from HN and post them to Instapaper
-hn_client = HackerNewsClient.new
+require "io/console"
+require "optparse"
+require "optparse/date"
 
-date = Date.new(2022, 9, 16) - 1
-count = 1
+def get_char
+  input = $stdin.getch
+  control_c_code = "\u0003"
+  exit(1) if input == control_c_code
+  input
+end
 
-puts "pulling top #{count} articles for #{date}"
+yesterday = Date.today - 1
+
+# default to uploading yesterday's top 30, but support alternate dates, count, and confirmation for each post
+options = {
+  date: yesterday,
+  count: 30,
+  confirm: false
+}
+OptionParser.new do |opts|
+  opts.banner = "Usage: update_feed.rb [options]"
+
+  opts.on("-d", "--date [DATE]", Date, "Date to pull top posts from")
+
+  opts.on("-c", "--count [COUNT]", OptionParser::DecimalInteger, "Number of top posts to pull")
+
+  opts.on("--confirm", "Whether to confirm each post during upload")
+end.parse!(into: options)
+
+puts options
+
+puts "pulling top #{options[:count]} articles for #{options[:date]}"
 puts
 
-posts = hn_client.get_top_posts(date, count)
+hn_client = HackerNewsClient.new
+
+posts = hn_client.get_top_posts(options[:date], options[:count])
 
 ip_client = InstapaperClient.new(Config::INSTAPAPER_USERNAME, Config::INSTAPAPER_PASSWORD)
 
 posts.each do |post|
   title = post[0]
   url = post[1]
-  puts "adding post: #{title}"
-  ip_client.add_url(url, title)
+  if options[:confirm]
+    puts "add post? #{title} (y/n)"
+
+    input = get_char
+    if input == "y"
+      ip_client.add_url(url, title)
+    end
+  else
+    puts "adding post: #{title}"
+    ip_client.add_url(url, title)
+  end
 end
